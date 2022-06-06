@@ -1,6 +1,13 @@
+import sys
+sys.path.insert(0,'C:\\Users\\stefa\\Desktop\\RES_Projekat\\Projekat\\lokalniUredjaj')
+import Kontroleri
+
+#import kontrolerFunkcije
+#from Model.LocalDeviceStorage import LocalDeviceStorage
 import socket
 import os
 from _thread import *
+
 ServerSideSocket = socket.socket()
 host = '127.0.0.1'
 port = 2004
@@ -8,16 +15,23 @@ ThreadCount = 0
 
 KontrolerSideSocket = socket.socket()
 hostKontroler = '127.0.0.1'
-portKontroler = 2005
+portKontroler = int(input("Unesi port -> "))
+
 try:
     KontrolerSideSocket.bind((hostKontroler, portKontroler))
     ServerSideSocket.connect((host, port))
 except socket.error as e:
     print(str(e))
 res = ServerSideSocket.recv(1024)
-print('Socket is listening..')
+
+print('Soket je trenutno u osluskivanju zahteva od strane klijenta..')
 KontrolerSideSocket.listen(5)
-def multi_threaded_client(connection):
+naz = "Kontoler"+str(portKontroler)
+Kontroleri.Kontroleri.DodajUListu(int(portKontroler),naz)
+Kontroleri.Kontroleri.VratiKontolere()
+portKontroler = portKontroler + 1 #uvecamo port zbog sledeceg
+
+def multiThreadedClient(connection):
     connection.send(str.encode('Kontroler potvrdjuje da radi'))
     while True:
         data = connection.recv(2048)
@@ -25,15 +39,15 @@ def multi_threaded_client(connection):
         if not data:
             break
         ServerSideSocket.send(data)
-        #ServerSideSocket.send(str.encode(response)) #kontroler prosledjuje na soket od AMS
         print(response) #ispisujemo na kontroleru
-        #connection.sendall(str.encode(response))
     connection.close()
 while True:
     Client, address = KontrolerSideSocket.accept()
-    print('Connected to: ' + address[0] + ':' + str(address[1]))
-    start_new_thread(multi_threaded_client, (Client, ))
+    print('Povezani ste upravo sa: ' + address[0] + ':' + str(address[1]))
+    start_new_thread(multiThreadedClient, (Client, ))
     ThreadCount += 1
-    print('Thread Number: ' + str(ThreadCount))
+    print('Broj niti: ' + str(ThreadCount))
+    Kontroleri.Kontroleri.VratiKontolere()
+
 KontrolerSideSocket.close()
 ServerSideSocket.close()
