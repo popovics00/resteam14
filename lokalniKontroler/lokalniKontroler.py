@@ -1,9 +1,9 @@
 import sys
-sys.path.insert(0,'C:\\Users\\stefa\\Desktop\\RES_Projekat\\Projekat\\lokalniUredjaj')
-import Kontroleri
-
-#import kontrolerFunkcije
-#from Model.LocalDeviceStorage import LocalDeviceStorage
+import storageFunkije as LocalDeviceStorage
+import klasaLokalniUredjaj as lokalniUredjaj
+sys.path.insert(0,'C:\\Users\\stefa\\Desktop\\RES_Projekat\\Projekat2\\resteam14\\')
+from lokalniUredjaj import Kontroleri
+import storageFunkije as storageFun
 import socket
 import os
 from _thread import *
@@ -29,7 +29,10 @@ KontrolerSideSocket.listen(5)
 naz = "Kontoler"+str(portKontroler)
 Kontroleri.Kontroleri.DodajUListu(int(portKontroler),naz)
 Kontroleri.Kontroleri.VratiKontolere()
-portKontroler = portKontroler + 1 #uvecamo port zbog sledeceg
+
+storageUredjaja = storageFun.LocalDeviceStorage()
+uredjajTemp = lokalniUredjaj.lokalniUredjaj("stefan","stefan","stefan")
+storageUredjaja.DodajNoviUredjaj(uredjajTemp,portKontroler)
 
 def multiThreadedClient(connection):
     connection.send(str.encode('Kontroler potvrdjuje da radi'))
