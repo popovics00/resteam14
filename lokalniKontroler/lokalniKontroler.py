@@ -1,12 +1,13 @@
 import sys
-import storageFunkije as LocalDeviceStorage
+from tracemalloc import start
+import storageFunkije as StorageUredjaj
 import klasaLokalniUredjaj as lokalniUredjaj
 sys.path.insert(0,'C:\\Users\\stefa\\Desktop\\RES_Projekat\\Projekat2\\resteam14\\')
 from lokalniUredjaj import Kontroleri
 import storageFunkije as storageFun
 import socket
-import os
 from _thread import *
+
 
 ServerSideSocket = socket.socket()
 host = '127.0.0.1'
@@ -31,18 +32,22 @@ Kontroleri.Kontroleri.DodajUListu(int(portKontroler),naz)
 Kontroleri.Kontroleri.VratiKontolere()
 
 storageUredjaja = storageFun.LocalDeviceStorage()
-uredjajTemp = lokalniUredjaj.lokalniUredjaj("stefan","stefan","stefan")
-storageUredjaja.DodajNoviUredjaj(uredjajTemp,portKontroler)
 
 def multiThreadedClient(connection):
     connection.send(str.encode('Kontroler potvrdjuje da radi'))
+    global startTime
     while True:
         data = connection.recv(2048)
-        response = 'Poruka: ' + data.decode('utf-8')
+        response = data.decode('utf-8')
         if not data:
             break
-        ServerSideSocket.send(data)
+        ServerSideSocket.send(data) #OVO TREBA ZAKOMENTARISATI
         print(response) #ispisujemo na kontroleru
+        #OVDE UPISUJEMO U FAJL
+        splitTemp = response.split("/")
+        uredjajTemp = lokalniUredjaj.lokalniUredjaj(splitTemp[0], splitTemp[1], splitTemp[2])
+        storageUredjaja.DodajNoviUredjaj(uredjajTemp,portKontroler)
+        storageUredjaja.IscitajFajl(portKontroler,ServerSideSocket)
     connection.close()
 while True:
     Client, address = KontrolerSideSocket.accept()
