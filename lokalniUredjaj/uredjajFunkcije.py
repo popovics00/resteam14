@@ -1,6 +1,7 @@
 import socket
 import sys 
 import Kontroleri
+from datetime import datetime
 
 #GLOBALNE
 AMSSocket = socket.socket()
@@ -10,6 +11,9 @@ hostKontroler = '127.0.0.1'
 port = 2004
 portKontroler = 2005
 tipUredjaja = 0
+idTemp = ""
+stanjeTemp=""
+
 def konektujNaAMS():
     try:
         AMSSocket.connect((host, port))
@@ -17,6 +21,12 @@ def konektujNaAMS():
         print(str(e))
     print('Cekamo na odgovor konekcije od strane AMS!')
     res = AMSSocket.recv(1024)
+    global idTemp
+    idTemp = input("Unesite ID uredjaja -> ")
+    global stanjeTemp
+    stanjeTemp = input("Unesite pocetno stanje -> ")
+    temp="{0}/{1}/{2}".format(idTemp,str(datetime.now()),stanjeTemp)
+    Send(str.encode(temp), AMSSocket)
     
 
 def konektujNaKontroler(portKontroler,tipUredjaja):
@@ -26,20 +36,28 @@ def konektujNaKontroler(portKontroler,tipUredjaja):
         print(str(e))
     print('Cekamo na odgovor konekcije od strane Kontrolera!')
     res = KontrolerSocket.recv(1024)
+    global idTemp
+    global stanjeTemp
     if tipUredjaja==1:
-        temp = "register=analog/0"
+        #ANALOG
+        idTemp = input("Unesite ID uredjaja -> ")
+        stanjeTemp = input("Unesite pocetno stanje -> ")
+        temp="{0}/{1}/{2}".format(idTemp,str(datetime.now()),stanjeTemp)
         Send(str.encode(temp), KontrolerSocket)
     elif tipUredjaja==2:
-        temp = "register=digital/0"
+        #DIGITAL
+        idTemp = input()
+        stanjeTemp = input()
+        temp="{0}/{1}/{2}".format(idTemp,str(datetime.now()),stanjeTemp)
         Send(str.encode(temp), KontrolerSocket)
 
 def KonektujSe():
     print("Odredi tip uredjaja >>\n 1 - Analogni \n 2 - Digitalni")
     tipUredjaja = int(input("-> "))
 
-    print('Na koga se konektuje uredjaj >>\n')
-    print('1 - Asset Menagement Sistem\n')
-    print('2 - Lokalni kontroler\n')
+    print('Na koga se konektuje uredjaj >>')
+    print('1 - Asset Menagement Sistem')
+    print('2 - Lokalni kontroler')
     x = int(input("-> "))
 
     if x==1 :
@@ -55,22 +73,22 @@ def KonektujSe():
 
     while True:
         if x==1 :
-            Input = input('Unesi poruku AMS: ')
-            Send(str.encode(Input), AMSSocket)
+            #Input = input('Unesi poruku AMS: ')
+            #Send(str.encode(Input), AMSSocket)
             if tipUredjaja==1 :
-                AnalogniMenu()
+                AnalogniMenu(AMSSocket)
             elif tipUredjaja ==2:
-                DigitalniMenu()
+                DigitalniMenu(AMSSocket)
             else:
                 print("Nepostojeci tip uredjaja")
                 break
         elif x==2 :
-            Input = input('Unesi poruku KONTROLERU: ')
-            Send(str.encode(Input), KontrolerSocket)
+            #Input = input('Unesi poruku KONTROLERU: ')
+            #Send(str.encode(Input), KontrolerSocket)
             if tipUredjaja==1 :
-                AnalogniMenu()
+                AnalogniMenu(KontrolerSocket)
             elif tipUredjaja ==2:
-                DigitalniMenu()
+                DigitalniMenu(KontrolerSocket)
             else:
                 print("Nepostojeci tip uredjaja")
                 break
@@ -86,10 +104,16 @@ def ZatvoriKonekciju():
     AMSSocket.close()
     KontrolerSocket.close()
 
-def AnalogniMenu():
+def AnalogniMenu(soket):
     print("Promena vrednosti analognog")
+    stanjeTemp = input("-> ")
+    temp="{0}/{1}/{2}".format(idTemp,str(datetime.now()),stanjeTemp)
+    Send(str.encode(temp), soket)
 
-def DigitalniMenu():
+def DigitalniMenu(soket):
     print("Izaberi komandu")
     print("1 - Upali / Otvori")
     print("2 - Ugasi / Zatvori")
+    stanjeTemp = input("-> ")
+    temp="{0}/{1}/{2}".format(idTemp,str(datetime.now()),stanjeTemp)
+    Send(str.encode(temp), soket)
