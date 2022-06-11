@@ -11,7 +11,7 @@ host = '127.0.0.1'
 port = 2004
 ThreadCount = 0 #ovo broji niti koliko imamo
 
-Baza.konekcijaSaBazom()
+bazaPodataka = Baza.BazaPodataka()
 
 try:
     ServerSideSocket.bind((host, port)) #pokusavamo da bindujemo na adresu i port
@@ -24,9 +24,13 @@ def multi_threaded_client(connection):
     connection.send(str.encode('Server potrvrdjuje da radi!'))
     while True:
         data = connection.recv(2048)
-        response = 'Poruka: ' + data.decode('utf-8')
+        response = data.decode('utf-8')
         if not data:
             break
+        splitTemp = response.split("/")
+        #uredjajTemp = lokalniUredjaj.lokalniUredjaj(splitTemp[0], splitTemp[1], splitTemp[2])
+        bazaPodataka.KonekcijaSaBazom()
+        bazaPodataka.CuvajUBazu(splitTemp[0],splitTemp[1],splitTemp[2])
         print(response) #ispis na serveru
         #connection.sendall(str.encode(response))    #potvrdjujemo da je poruka primljena
     connection.close()
