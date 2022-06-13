@@ -23,7 +23,7 @@ class BazaPodataka:
                 #cursor.execute("CREATE DATABASE bazaRes;")
                 record = self.cursor.fetchone()
                 print("Uspesno ste konektovani na bazu: ", record)
-                self.cursor.execute("CREATE TABLE uredjaji")
+                #self.cursor.execute("CREATE TABLE uredjaji")
 
         except Error as e:
             print("Problem pri konektovanju na bazu ", e)
@@ -32,11 +32,15 @@ class BazaPodataka:
         #cursor.execute("create table uredjaji(id VARCHAR(50) NOT NULL, vreme VARCHAR(50) NOT NULL , trenutnaVrednost VARCHAR(50) NOT NULL, PRIMARY KEY (id))")
     def CuvajUBazu(self, prvi, drugi, treci):
         self.cursor.execute("USE bazaRes;")
-        print(prvi)
-        print(drugi)
-        print(treci)
-
+        #print(prvi)
+        #print(drugi)
+        #print(treci)
         #tempKomanda="INSERT INTO uredjaji(id, vreme, trenutnaVrednost) VALUES("+prvi+","+drugi+","+treci+");"
-        tempKomanda="INSERT INTO uredjaji(id, vreme, trenutnaVrednost) VALUES('{0}', '{1}', '{2}');".format(prvi,drugi,treci)
-        self.cursor.execute(tempKomanda)
+        try:
+            tempKomanda="INSERT INTO uredjaji(id, vreme, trenutnaVrednost) VALUES('{0}', '{1}', '{2}');".format(prvi,drugi,treci)
+            self.cursor.execute(tempKomanda)
+        except:
+            tempKomanda="UPDATE uredjaji set trenutnaVrednost = '{0}' where id = '{1}';".format(treci,prvi)
+            self.cursor.execute(tempKomanda)
+
         self.connection.commit()
