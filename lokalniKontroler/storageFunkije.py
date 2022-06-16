@@ -21,12 +21,14 @@ class LocalDeviceStorage:
         tempString = "C:\\Users\\stefa\\Desktop\\RES_Projekat\\Projekat2\\resteam14\\lokalniKontroler\\kontroler" + str(port) + ".xml"
         tree = ET.parse(tempString) 
         root = tree.getroot() 
-
+        
         for lu in root.findall('LokalniUredjaj'):
-            tempText = lu[0].text+'/'+lu[1].text+'/'+lu[2].text+'/'
-            #root.remove(lu)
+            tempText = lu[0].text+'/'+lu[1].text+'/'+lu[2].text+'/' 
+            print("SALJEM AMS  ->"+tempText)
             saljiNaSoket.send(str.encode(tempText))
-            time.sleep(3)
+            self.uredjaji.clear()
+            root.remove(lu)
+        #tree.write(tempString)
         time.sleep(vremeFun.PreuzmiVreme())
         os.remove(tempString)
 
