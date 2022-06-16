@@ -1,9 +1,8 @@
 import sys
+import cuvanjeKontrolera as Kontroleri
 from tracemalloc import start
 import storageFunkije as StorageUredjaj
 import klasaLokalniUredjaj as lokalniUredjaj
-sys.path.insert(0,'C:\\Users\\stefa\\Desktop\\RES_Projekat\\Projekat2\\resteam14\\')
-from lokalniUredjaj import Kontroleri
 import storageFunkije as storageFun
 import socket
 from _thread import *
@@ -23,14 +22,12 @@ try:
     ServerSideSocket.connect((host, port))
 except socket.error as e:
     print(str(e))
-res = ServerSideSocket.recv(1024)
+res = ServerSideSocket.recv(2048)
 
 print('Soket je trenutno u osluskivanju zahteva od strane klijenta..')
 KontrolerSideSocket.listen(5)
 naz = "Kontoler"+str(portKontroler)
-Kontroleri.Kontroleri.DodajUListu(int(portKontroler),naz)
-Kontroleri.Kontroleri.VratiKontolere()
-
+Kontroleri.CuvajKontrolere(portKontroler,naz)
 storageUredjaja = storageFun.LocalDeviceStorage()
 
 def multiThreadedClient(connection):
@@ -41,7 +38,7 @@ def multiThreadedClient(connection):
         response = data.decode('utf-8')
         if not data:
             break
-        ServerSideSocket.send(data) #OVO TREBA ZAKOMENTARISATI
+        #ServerSideSocket.send(data) #OVO TREBA ZAKOMENTARISATI
         print(response) #ispisujemo na kontroleru
         #OVDE UPISUJEMO U FAJL
         splitTemp = response.split("/")
@@ -55,7 +52,6 @@ while True:
     start_new_thread(multiThreadedClient, (Client, ))
     ThreadCount += 1
     print('Broj niti: ' + str(ThreadCount))
-    Kontroleri.Kontroleri.VratiKontolere()
-
+Kontroleri.Brisanje(portKontroler)
 KontrolerSideSocket.close()
 ServerSideSocket.close()

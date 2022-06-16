@@ -2,12 +2,12 @@ from multiprocessing.connection import wait
 import klasaLokalniUredjaj as LU
 import klasaXMLWritter as XMLWritter
 import xml.etree.ElementTree as ET 
+import vremeFunction as vremeFun
 import os
 import time
 class LocalDeviceStorage:
     def __init__(self):
         self.uredjaji = []
-
 
     def DodajNoviUredjaj(self, uredjajDodaj:LU.lokalniUredjaj, port):
         self.uredjaji.append(vars(uredjajDodaj))
@@ -23,9 +23,11 @@ class LocalDeviceStorage:
         root = tree.getroot() 
 
         for lu in root.findall('LokalniUredjaj'):
-            tempText = lu[0].text+'/'+lu[1].text+'/'+lu[2].text
+            tempText = lu[0].text+'/'+lu[1].text+'/'+lu[2].text+'/'
+            #root.remove(lu)
             saljiNaSoket.send(str.encode(tempText))
-        time.sleep(5)
+            time.sleep(3)
+        time.sleep(vremeFun.PreuzmiVreme())
         os.remove(tempString)
 
 
