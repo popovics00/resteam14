@@ -1,7 +1,6 @@
 import socket
-import sys 
-import Kontroleri
 from datetime import datetime
+import xml.etree.ElementTree as ET 
 
 #GLOBALNE
 AMSSocket = socket.socket()
@@ -42,15 +41,15 @@ def konektujNaKontroler(portKontroler,tipUredjaja):
         #ANALOG
         idTemp = input("Unesite ID uredjaja -> ")
         stanjeTemp = input("Unesite pocetno stanje -> ")
-        temp="{0}/{1}/{2}".format(idTemp,str(datetime.now()),stanjeTemp)
+        temp="{0}/{1}/{2}/".format(idTemp,str(datetime.now()),stanjeTemp)
         Send(str.encode(temp), KontrolerSocket)
     elif tipUredjaja==2:
         #DIGITAL
-        idTemp = input()
-        stanjeTemp = input()
-        temp="{0}/{1}/{2}".format(idTemp,str(datetime.now()),stanjeTemp)
+        idTemp = input("Unesite ID uredjaja -> ")
+        stanjeTemp = input("Unesite pocetno stanje -> ")
+        temp="{0}/{1}/{2}/".format(idTemp,str(datetime.now()),stanjeTemp)
         Send(str.encode(temp), KontrolerSocket)
-
+        
 def KonektujSe():
     print("Odredi tip uredjaja >>\n 1 - Analogni \n 2 - Digitalni")
     tipUredjaja = int(input("-> "))
@@ -64,7 +63,7 @@ def KonektujSe():
         konektujNaAMS()
     elif x==2 :
         print("KONTROLERI NA RASPOLAGANJU")
-        Kontroleri.Kontroleri.VratiKontolere()
+        IscitajKontrolere()
         portKontroler = int(input("Odaberi port: "))
         konektujNaKontroler(portKontroler,tipUredjaja)
     else:
@@ -73,8 +72,6 @@ def KonektujSe():
 
     while True:
         if x==1 :
-            #Input = input('Unesi poruku AMS: ')
-            #Send(str.encode(Input), AMSSocket)
             if tipUredjaja==1 :
                 AnalogniMenu(AMSSocket)
             elif tipUredjaja ==2:
@@ -83,8 +80,6 @@ def KonektujSe():
                 print("Nepostojeci tip uredjaja")
                 break
         elif x==2 :
-            #Input = input('Unesi poruku KONTROLERU: ')
-            #Send(str.encode(Input), KontrolerSocket)
             if tipUredjaja==1 :
                 AnalogniMenu(KontrolerSocket)
             elif tipUredjaja ==2:
@@ -107,7 +102,7 @@ def ZatvoriKonekciju():
 def AnalogniMenu(soket):
     print("Promena vrednosti analognog")
     stanjeTemp = input("-> ")
-    temp="{0}/{1}/{2}".format(idTemp,str(datetime.now()),stanjeTemp)
+    temp="{0}/{1}/{2}/".format(idTemp,str(datetime.now()),stanjeTemp)
     Send(str.encode(temp), soket)
 
 def DigitalniMenu(soket):
@@ -115,5 +110,18 @@ def DigitalniMenu(soket):
     print("1 - Upali / Otvori")
     print("2 - Ugasi / Zatvori")
     stanjeTemp = input("-> ")
-    temp="{0}/{1}/{2}".format(idTemp,str(datetime.now()),stanjeTemp)
-    Send(str.encode(temp), soket)
+    if stanjeTemp=="1":
+        temp="{0}/{1}/{2}/".format(idTemp,str(datetime.now()),"ON")
+        Send(str.encode(temp), soket)
+    elif stanjeTemp=="2":
+        temp="{0}/{1}/{2}/".format(idTemp,str(datetime.now()),"OFF")
+        Send(str.encode(temp), soket)
+
+def IscitajKontrolere():
+        tempString = "C:\\Users\\stefa\\Desktop\\RES_Projekat\\Projekat2\\resteam14\\lokalniKontroler\\kontroleriLista.xml"
+        tree = ET.parse(tempString) 
+        root = tree.getroot() 
+
+        for kon in root.findall('Kontroler'):
+            tempText = kon[0].text+' sa portom '+kon[1].text
+            print(tempText)
