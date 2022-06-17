@@ -21,27 +21,26 @@ except socket.error as e:
 
 print('[ALERT] Socket trenutno osluskuje i ocekuje poruke..')
 ServerSideSocket.listen(5)
+start_new_thread(bazaPodataka.AsmMenu,())
+
 def multi_threaded_client(connection):
     connection.send(str.encode('Server potrvrdjuje da radi!'))
     while True:
-        data = connection.recv(2048)
+        data = connection.recv(2024)
         response = data.decode('utf-8')
 
         print(response) #ispis na serveru
         if not data:
             break
         splitTemp = response.split("/")
-        #uredjajTemp = lokalniUredjaj.lokalniUredjaj(splitTemp[0], splitTemp[1], splitTemp[2])
         bazaPodataka.CuvajUBazu(splitTemp[0],splitTemp[1],splitTemp[2])
-        #connection.sendall(str.encode(response))    #potvrdjujemo da je poruka primljena
     connection.close()
 while True:
     Client, address = ServerSideSocket.accept()
-    print('Connected to: ' + address[0] + ':' + str(address[1]))
+    print('Povezani ste: ' + address[0] + ':' + str(address[1]))
     start_new_thread(multi_threaded_client, (Client, ))
     ThreadCount += 1
-    print('Thread Number: ' + str(ThreadCount))
-
+    print('Broj niti: ' + str(ThreadCount))
 if connection.is_connected():
     cursor.close()
     connection.close()
