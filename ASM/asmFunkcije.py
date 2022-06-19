@@ -2,8 +2,9 @@ from ast import Try
 from sqlite3 import Cursor
 import mysql.connector
 from mysql.connector import Error
-from datetime import date
+from datetime import datetime, timedelta
 import sys
+from colorama import Fore, Back, Style
 
 class BazaPodataka:
     def __init__(self): #pragma:no cover
@@ -57,6 +58,71 @@ class BazaPodataka:
         except:
             return "ERROR"
 
+    #3 - Izlistavanje svih uredjaja čiji je broj radnih sati preko konfigurisane vrednosti (alarmirati i obojiti u crvenu boju one uređaje za koje je broj radnih sati veći od granice definisane u opcijama aplikacije)
+    def RacunajSvimaRadneSate(self,alarmGranica):
+        query="select * from uredjajiLista"
+        try:
+            self.cursor.execute(query)
+        except:
+            return "ERROR"
+        
+        FMT = '%Y-%m-%d %H:%i:%s'
+        listaUredjaja = self.cursor.fetchall()
+        
+        for row in listaUredjaja:
+            self.RacunajRadneSate("01/01/0001","31/12/9999",row[0],"YES",alarmGranica) #da ne kucamo ponovo samo napravimo poziv postojee funkcije
+
+    def RacunajRadneSate(self,odDatuma, doDatuma,id,ispis,alarmGranica):
+        #Broj radnih sati za izabrani uredjaj za izabrani vremenski period (od – do kalendarski po satima)
+        odTemp = KomandaZaDatum(odDatuma)
+        doTemp = KomandaZaDatum(doDatuma)
+        #prikaz svih sa tim id u tom vremenu po rastucem redosledu vremena kako bi analizirali redom
+        query="select * from uredjaji where vreme>={0} and vreme<={1} and id='{2}' order by vreme ASC".format(odTemp,doTemp,id)
+        try:
+            self.cursor.execute(query)
+        except:
+            return "ERROR"
+        
+        FMT = '%Y-%m-%d %H:%i:%s'
+        result = self.cursor.fetchall()
+        #print(FMT)
+        #print(result[0][1])
+        rvreme = result[0][1]-result[0][1]#datetime.strftime(result[0][1],FMT)
+        tempStart =result[0][1]
+        tempEnd=result[0][1]
+        prethodnoStanje=""
+        for row in result:
+            if row[2]=="OFF" or row[2]=="0":
+                #print("Sada je ugasen pa zavrsavamo vreme i upisujemo u sumu vremena")
+                tempEnd=row[1]
+                if prethodnoStanje == "ON":
+                    rvreme = rvreme + (tempEnd-tempStart)
+                #print("OVO JE VREME" + str(rvreme))
+                tempStart=tempEnd
+                prethodnoStanje="OFF"
+            elif row[2]!="OFF": #ako je neki broj ili ON
+                #print("Sada je upaljen i krecemo racunanje vremena")
+                #print("OVO JE VREME" + str(rvreme))
+                tempStart=row[1]
+                prethodnoStanje="ON"
+        sec=rvreme.total_seconds()
+        if ispis=="YES":
+            if sec <= alarmGranica:
+                print(Fore.RED+"ID: {0} | RadnoVreme: {1} ".format(id,rvreme)+Fore.WHITE)
+                #print(Fore.WHITE)
+            elif sec >alarmGranica:
+                print(Fore.GREEN+"ID: {0} | RadnoVreme: {1} ".format(id,rvreme)+Fore.WHITE)
+                #print(Fore.WHITE)
+
+        tempKomanda="UPDATE uredjajiLista set vremeRada = {0} where id = '{1}';".format(int(sec),id)
+        
+        try:
+            self.cursor.execute(tempKomanda)
+            self.connection.commit()
+            return int(sec)
+        except:
+            return "ERROR"
+
     #testirano
     def VratiPoVremenu(self,odDatuma,doDatuma,id):
         #odSplit=odDatuma.split("/")
@@ -86,13 +152,13 @@ class BazaPodataka:
             print("\n\nIzaberite opciju koju zelite za prikaz:")
             print("1 - Detalji promena za izabrani period za izabrani lokalni uređaj (sve promene + sumarno)")
             print("2 - Broj radnih sati za izabrani uredjaj za izabrani vremenski period (od – do kalendarski po satima)")
-            print("3 - Izlistavanje svih uredjaja čiji je broj radnih sati preko konfigurisane vrednosti (alarmirati i obojiti u crvenu boju one uređaje za koje je broj radnih sati veći od granice definisane u opcijama aplikacije)")
+            print("#3 - Izlistavanje svih uredjaja čiji je broj radnih sati preko konfigurisane vrednosti (alarmirati i obojiti u crvenu boju one uređaje za koje je broj radnih sati veći od granice definisane u opcijama aplikacije)")
             print("4 - Listanje svih postojećih uređaja u sistemu")
             print("\nZA GASENJE PROGRAMA STISNI BILO STA SEM PONUDJENIH")
             x = toInt(input("-> "))
             if x==4:
                 self.IspisiSve("uredjajiLista")
-            elif x==2:
+            elif x==1:
                 print("FORMAT DATUMA: DAN/MESEC/GODINA")
                 od=input('od: ')
                 do=input('do: ')
@@ -102,11 +168,20 @@ class BazaPodataka:
                 except:
                     print("Pogresno unete vrednosti (verovatno pogresan format datuma)") 
                     return "ERROR"
+            elif x==2:
+                print("FORMAT DATUMA: DAN/MESEC/GODINA")
+                #od=input('od: ')
+                #do=input('do: ')
+                od="02/02/2010"
+                do="20/10/2025"
+                uredjaj=input('uredjaj -> ')
+                print("Uredjaj sa {0} ima {1} sekundi aktivnost u periodu od {2} do {3}".format(uredjaj,self.RacunajRadneSate(od, do,uredjaj,"NO",0),od,do,))
+            elif x==3:
+                alarmGranica = int(input("Unesite granicu alarma -> "))
+                self.RacunajSvimaRadneSate(alarmGranica)
             else:
                 print("Izlazak iz programa")
                 sys.exit()
-            #elif x==2:
-            #elif x==1:
 
 #testirano
 def toInt(broj):
