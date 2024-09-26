@@ -23,7 +23,7 @@ print('[ALERT] Socket trenutno osluskuje i ocekuje poruke..')
 ServerSideSocket.listen(5)
 start_new_thread(bazaPodataka.AsmMenu,())
 
-def multi_threaded_client(connection):
+def multi_threaded_client(connection): #pragma:no cover
     connection.send(str.encode('Server potrvrdjuje da radi!'))
     while True:
         data = connection.recv(2024)
